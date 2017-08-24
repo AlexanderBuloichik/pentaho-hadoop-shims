@@ -21,43 +21,26 @@
  ******************************************************************************/
 package org.pentaho.hadoop.shim.api.format;
 
-public interface PentahoOutputFormat {
-  enum VERSION {
-    VERSION_1_0, VERSION_2_0
+import java.io.Closeable;
+import java.util.List;
+
+import org.pentaho.di.core.RowMetaAndData;
+
+public interface IPentahoInputFormat {
+
+  /**
+   * Get split parts.
+   */
+  List<IPentahoInputSplit> getSplits() throws Exception;
+
+  /**
+   * Read one split part.
+   */
+  IPentahoRecordReader createRecordReader( IPentahoInputSplit split ) throws Exception;
+
+  public interface IPentahoInputSplit {
   }
 
-  enum ENCODING {
-    PLAIN, DICTIONARY, BIT_PACKED, RLE
+  public interface IPentahoRecordReader extends Iterable<RowMetaAndData>, Closeable {
   }
-
-  void setSchema( SchemaDescription schema );
-
-  void setOutputFile( String file );
-
-  void setVersion( VERSION ver );
-
-  void setEncoding( ENCODING enc );
-
-  /**
-   * Sets row group size
-   *
-   * @param size size in bytes
-   */
-  void setRowGroupSize( int size );
-
-  /**
-   * Sets page size for compression
-   *
-   * @param size size in bytes
-   */
-  void setDataPageSize( int size );
-
-  /**
-   *
-   *
-   * @param size size in bytes
-   */
-  void setDictionaryPageSize( int size );
-
-  PentahoRecordWriter createRecordWriter();
 }

@@ -19,7 +19,7 @@
  * limitations under the License.
  *
  ******************************************************************************/
-package org.pentaho.hadoop.shim.common.format;
+package org.pentaho.hadoop.shim.common.format.parquet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,6 +88,34 @@ public class ParquetConverter {
     schema.forEach( f -> types.add( convertField( f ) ) );
 
     return new MessageType( "parquet-schema", types );
+  }
+
+  public static SchemaDescription createSchemaDescription( MessageType schema ) {
+    SchemaDescription r = new SchemaDescription();
+
+    schema.getFields().forEach( t -> r.addField( convertField( r, t ) ) );
+
+    return r;
+  }
+
+  private static SchemaDescription.Field convertField( SchemaDescription schema, Type t ) {
+    boolean allowNull = t.getRepetition() != Repetition.REQUIRED;
+    switch ( t.asPrimitiveType().getPrimitiveTypeName() ) {
+      case BINARY:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_STRING, allowNull );
+      case BOOLEAN:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_BOOLEAN, allowNull );
+      case DOUBLE:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_NUMBER, allowNull );
+      case FLOAT:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_NUMBER, allowNull );
+      case INT32:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_INTEGER, allowNull );
+      case INT64:
+        return schema.new Field( t.getName(), t.getName(), ValueMetaInterface.TYPE_INTEGER, allowNull );
+      default:
+        throw new RuntimeException( "Undefined type: " + t );
+    }
   }
 
   private PrimitiveType convertField( SchemaDescription.Field f ) {

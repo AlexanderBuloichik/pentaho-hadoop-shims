@@ -21,10 +21,24 @@
  ******************************************************************************/
 package org.pentaho.hadoop.shim.api.format;
 
-import java.io.Closeable;
+public interface IPentahoParquetInputFormat extends IPentahoInputFormat {
+  /**
+   * Read schema for display to user.
+   */
+  SchemaDescription readSchema( String file ) throws Exception;
 
-import org.pentaho.di.core.RowMetaAndData;
+  /**
+   * Set schema for file reading.
+   */
+  void setSchema( SchemaDescription schema ) throws Exception;
 
-public interface PentahoRecordWriter extends Closeable {
-  void write( RowMetaAndData row );
+  /**
+   * Set input file.
+   */
+  void setInputFile( String file ) throws Exception;
+
+  /**
+   * Split size, bytes.
+   */
+  void setSplitSize( long blockSize ) throws Exception;
 }
