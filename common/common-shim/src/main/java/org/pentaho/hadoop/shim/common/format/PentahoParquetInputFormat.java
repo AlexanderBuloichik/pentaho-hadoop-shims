@@ -21,9 +21,11 @@
  ******************************************************************************/
 package org.pentaho.hadoop.shim.common.format;
 
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
@@ -93,12 +95,21 @@ public class PentahoParquetInputFormat extends HadoopFormatBase implements IPent
   @Override
   public void setInputFile( String file ) throws Exception {
     inClassloader( () -> {
+      FileSystem fs = FileSystem.get( job.getConfiguration() );
       Path filePath = new Path( file );
-      ParquetInputFormat.setInputPaths( job, filePath.getParent() );
-      ParquetInputFormat.setInputDirRecursive( job, false );
-      ParquetInputFormat.setInputPathFilter( job, ReadFileFilter.class );
-      job.getConfiguration().set( ReadFileFilter.FILTER_DIR, filePath.getParent().toString() );
-      job.getConfiguration().set( ReadFileFilter.FILTER_FILE, filePath.toString() );
+      if ( !fs.exists( filePath ) ) {
+        throw new NoSuchFileException( file );
+      }
+      if ( fs.getFileStatus( filePath ).isDirectory() ) { // directory
+        ParquetInputFormat.setInputPaths( job, filePath );
+        ParquetInputFormat.setInputDirRecursive( job, true );
+      } else { // file
+        ParquetInputFormat.setInputPaths( job, filePath.getParent() );
+        ParquetInputFormat.setInputDirRecursive( job, false );
+        ParquetInputFormat.setInputPathFilter( job, ReadFileFilter.class );
+        job.getConfiguration().set( ReadFileFilter.FILTER_DIR, filePath.getParent().toString() );
+        job.getConfiguration().set( ReadFileFilter.FILTER_FILE, filePath.toString() );
+      }
     } );
   }
 
